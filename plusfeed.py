@@ -171,7 +171,10 @@ class FeedPage(webapp.RequestHandler):
                             if post[66][0][6][0][1].find('image') > -1:
                                 desc = desc + ' <p><img src="http:' + post[66][0][6][0][2] + '"/></p>'
                             else:
-                                desc = desc + ' <a href="' + post[66][0][6][0][8] + '">' + post[66][0][6][0][8] + '</a>'
+                                try:
+                                    desc = desc + ' <a href="' + post[66][0][6][0][8] + '">' + post[66][0][6][0][8] + '</a>'
+                                except:
+                                    test = 1
                     
                     if desc == '':
                         desc = permalink                    
