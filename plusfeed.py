@@ -1,5 +1,6 @@
 import re
 import logging
+import os
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import urlfetch
@@ -10,6 +11,12 @@ from django.utils import simplejson as json
 
 from cgi import escape
 from datetime import datetime
+from datetime import timedelta
+import time
+
+td = timedelta(hours=7)
+
+ver = os.environ['CURRENT_VERSION_ID']
 
 class MainPage(webapp.RequestHandler):
     
@@ -22,18 +29,12 @@ class MainPage(webapp.RequestHandler):
             <html>
                 <head>
                 <title>Google Plus Feed</title>
-                <style>
-                body{
-                    font-family: sans-serif;
-                    font-size: 14px;
-                }
-                li{
-                    font-size: 11px;
-                }
-                </style>
+                <link rel="stylesheet" type="text/css" href="/style.css">
                 <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
                 </head>
                 <body>
+                    <div id="wrapper">
+                    <div id="top">
                     <h1>Unofficial Google+ User Feed</h1>
                     <p>
                     Add the Google+ user number at the end of this URL for their profile feed. Like this: <a href="http://plusfeed.appspot.com/104961845171318028721">http://plusfeed.appspot.com/104961845171318028721</a>.
@@ -53,7 +54,25 @@ class MainPage(webapp.RequestHandler):
                     """)
         list = memcache.get('list')            
         if list:
-            out.write('<p><h3>' + str(len(list)) + ' Google+ profiles currently being served.</h3></p>')
+            out.write('<p><h3>' + str(len(list)) + ' Google+ profiles currently being served.</h3></p>\n\n')
+        
+        out.write('</div>\n')
+        
+        posts = memcache.get('posts')
+        if posts:
+            #logging.info(posts)
+            out.write('<h2>Recent Public Posts</h2>')
+            x = 0
+            for k,post in sorted(posts.iteritems(), reverse=True):
+                x = x + 1
+                if x > 50:
+                    break
+                out.write('<div class="post">\n')
+                out.write('<img class="thumb" src="' + post['authorimg'] + '?sz=24"/>\n')
+                out.write('<h3><a href="https://plus.google.com/' + post['authorid'] + '">' + post['author'] + '</a></h3>\n')
+                out.write('<div class="updated"><a href="' + post['permalink'] + '">Posted on ' + (post['updated'] - td).strftime('%B %d, %Y - %I:%M %p') + ' PST</a></div>\n')
+                out.write('<p>' + post['desc'] + '</p>\n')
+                out.write('</div>\n')
         
         out.write("""
                     <script type="text/javascript">
@@ -69,6 +88,7 @@ class MainPage(webapp.RequestHandler):
                       })();
 
                     </script>
+                    </div>
                 </body>
               </html>
                   """)
@@ -77,14 +97,31 @@ class MainPage(webapp.RequestHandler):
 class FeedPage(webapp.RequestHandler):
     
     def get(self, p):
-    
-        #logging.info(self.request.headers)
-    
+
         res = self.response
         out = res.out
+    
+        ip = os.environ['REMOTE_ADDR']
+        now = datetime.today()
+        
+        last_request = memcache.get(ip)
+        
+        if last_request:
+            if (now - last_request).seconds < 20:
+                logging.info('rate limited - returning 403')
+                res.set_status(403)
+                out.write('Forbidden: Rate limit exceeded')
+                return
+        else:
+            memcache.set(ip, now)
+
+        if p == 'reset':
+            memcache.flush_all()
+            out.write('reset')
+            return
         
         remtags = re.compile(r'<.*?>')
-        
+                
         feed = '<?xml version="1.0" encoding="UTF-8"?>\n'
         feed += '<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">\n'
         
@@ -145,6 +182,7 @@ class FeedPage(webapp.RequestHandler):
 
 
                 author = posts[0][3]
+                authorimg = 'https:' + posts[0][18]
                 updated = datetime.fromtimestamp(float(posts[0][5])/1000)
                 
                 feed += '<title>Google Plus User Feed - ' + author + '</title>\n'
@@ -155,6 +193,8 @@ class FeedPage(webapp.RequestHandler):
                 feed += '<author><name>' + author + '</name></author>\n'
                 
                 count = 0
+                
+                psts = {} 
                 
                 for post in posts:
                     #logging.info('post ' + post[21])
@@ -198,16 +238,27 @@ class FeedPage(webapp.RequestHandler):
                     
                     ptitle = htmldecode(desc)
                     ptitle = remtags.sub('', ptitle)
-                    
 
                     feed += '<entry>\n'
-                    feed += '<title>' + ptitle[:75] + '</title>\n'
+                    feed += '<title>' + escape(ptitle[:75]) + '</title>\n'
                     feed += '<link href="' + permalink + '" rel="alternate"></link>\n'
                     feed += '<updated>' + dt.strftime(ATOM_DATE) + '</updated>\n'
                     feed += '<id>tag:plus.google.com,' + dt.strftime('%Y-%m-%d') + ':/' + id + '/</id>\n'
                     feed += '<summary type="html">' + escape(desc) + '</summary>\n'
                     feed += '</entry>\n'
+                  
+                    pst = {}
+                    pst['permalink'] = permalink
+                    pst['title'] = ptitle
+                    pst['updated'] = dt
+                    pst['author'] = author
+                    pst['authorid'] = p
+                    pst['authorimg'] = authorimg
+                    pst['desc'] = desc
                     
+                    if dt.date() == datetime.today().date():
+                        t = int(time.mktime(dt.timetuple()))
+                        psts[t] = pst
                   
                 feed += '</feed>\n'
                 
@@ -216,9 +267,29 @@ class FeedPage(webapp.RequestHandler):
                 memcache.set(p, output, 10 * 60)
                 memcache.set('time_' + p, updated)
                 
-                list = {}
+                #front page 
+                mposts = memcache.get('posts')
+                
+                if not mposts:
+                    mposts = {}
+                    
+                mposts = dict(mposts.items() + psts.items())
+                
+                nposts = {}
+                x = 0
+                for k, v in sorted(mposts.iteritems(), reverse=True):
+                    x = x+1
+                    if x > 500:
+                        break
+                    nposts[k] = v
+
+                memcache.set('posts', nposts)
+                
+                #list of feeds
+                
                 mlist = memcache.get('list')
                 
+                list = {}
                 if mlist:
                     for k,v in mlist.iteritems():
                         list[k] = v
@@ -240,6 +311,7 @@ class FeedPage(webapp.RequestHandler):
         except Exception, err:
             self.error(500)
             out.write('<h1>500 Server Error</h1><p>' + str(err) + '</p>')
+            logging.error(err)
 
 
 
