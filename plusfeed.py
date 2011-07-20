@@ -78,6 +78,8 @@ class FeedPage(webapp.RequestHandler):
     
     def get(self, p):
     
+        #logging.info(self.request.headers)
+    
         res = self.response
         out = res.out
         
@@ -91,9 +93,15 @@ class FeedPage(webapp.RequestHandler):
 
         if 'If-Modified-Since' in self.request.headers:
             try:
-
-                last_seen = datetime.strptime(self.request.headers['If-Modified-Since'], HTTP_DATE_FMT)
                 ud = memcache.get('time_' + p)
+                uds = datetime.strftime(ud, HTTP_DATE_FMT)
+
+                ud = datetime.strptime(uds, HTTP_DATE_FMT)
+                last_seen = datetime.strptime(self.request.headers['If-Modified-Since'], HTTP_DATE_FMT)
+                
+                #logging.info('If Modified Since: ' + str(last_seen))
+                #logging.info('Cache            : ' + str(ud))
+                
                 if ud and last_seen and ud <= last_seen:
                     logging.info('returning 304')
                     res.set_status(304)
@@ -112,8 +120,12 @@ class FeedPage(webapp.RequestHandler):
     
         try:
             logging.info('re-requesting feed')
+            
             url = 'https://plus.google.com/_/stream/getactivities/' + p + '/?sp=[1,2,"' + p + '",null,null,null,null,"social.google.com",[]]'
+            
             result = urlfetch.fetch(url)
+            
+            
             if result.status_code == 200:
                 regex = re.compile(',,',re.M)
                 txt = result.content
