@@ -13,6 +13,7 @@ from cgi import escape
 from datetime import datetime
 from datetime import timedelta
 import time
+from string import Template
 
 td = timedelta(hours=7)
 
@@ -25,7 +26,12 @@ class MainPage(webapp.RequestHandler):
         res = self.response
         out = res.out
 
-        out.write("""
+        msg = ''
+        list = memcache.get('list')
+        if list:
+            msg = ' Currently serving ' + str(len(list)) + ' feeds';
+
+        top = """
             <html>
                 <head>
                 <title>PlusFeed - Unofficial Google+ User Feeds</title>
@@ -34,6 +40,7 @@ class MainPage(webapp.RequestHandler):
                 </head>
                 <body>
                     <div id="gb">
+                    <span>$countmsg</span>
                     <a href="http://plus.google.com">Google+</a>
                     </div>
                     <div id="header">
@@ -62,13 +69,16 @@ class MainPage(webapp.RequestHandler):
                         </p>
                         </div>
                     </div>
-                    """)
-                    
+                    """
+        s = Template(top);
+        out.write(s.substitute(countmsg = msg))       
+        
         out.write('<div id="posts">\n')
         posts = memcache.get('posts')
         if posts:
             #logging.info(posts)
             out.write('<h2>Recent Public Posts</h2>\n')
+            out.write('<div id="numfeeds">' + msg + '</div>')
             x = 0
             for k,post in sorted(posts.iteritems(), reverse=True):
                 x = x + 1

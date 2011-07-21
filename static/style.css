@@ -24,29 +24,35 @@ a{
 }
 
 #gb{
-height: 23px;
+height: 29px;
 width: 100%;
 background-color: #2D2D2D;
 border-bottom: 1px solid #000;
 font-size: 13px;
-padding: 6px 0px 0px;
-text-align: right;
+position: relative;
+}
+
+#gb span{
+    position: absolute;
+    top: 8px;
+    left: 16px;
 }
 
 #gb a{
     color: #CCC;
     font-weight: bold;
-    padding: 10px;
     margin: 0px;
+    position: absolute;
+    top: 8px;
+    right: 16px;
 }
 
 #header{
 height: 55px;
 width: 100%;
 border-bottom: 1px solid #E5E5E5;
-background-color: whiteSmoke;
 padding-top: 18px;
-
+background: whiteSmoke url(/plusfeed.png) no-repeat 20px;
 }
 
 h1, h2{
@@ -58,7 +64,7 @@ font-weight: normal;
 font-size: 26px;
 color: #3079ED;
 margin: 0px;
-padding: 0px 10px 0px 16px;
+padding: 0px 10px 0px 80px;
 display: inline;
 }
 

@@ -11,6 +11,10 @@ handlers:
   static_files: static/favicon.ico
   upload: static/favicon\.ico
 
+- url: /plusfeed\.png
+  static_files: static/plusfeed.png
+  upload: static/plusfeed\.png
+
 - url: /style\.css
   static_files: static/style.css
   upload: static/style\.css
