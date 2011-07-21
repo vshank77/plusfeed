@@ -28,40 +28,47 @@ class MainPage(webapp.RequestHandler):
         out.write("""
             <html>
                 <head>
-                <title>Google Plus Feed</title>
+                <title>PlusFeed - Unofficial Google+ User Feeds</title>
                 <link rel="stylesheet" type="text/css" href="/style.css">
                 <script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
                 </head>
                 <body>
-                    <div id="wrapper">
-                    <div id="top">
-                    <h1>Unofficial Google+ User Feed</h1>
-                    <p>
-                    Add the Google+ user number at the end of this URL for their profile feed. Like this: <a href="http://plusfeed.appspot.com/104961845171318028721">http://plusfeed.appspot.com/104961845171318028721</a>.
-                    </p>
-                    <p>
-                    If this site is useful, remember to give it a <g:plusone></g:plusone>
-                    </p>
-                    <p>
-                    Note: The feed will only display *public* items - if none of your posts are public, the feed won't work.
-                    </p>
-                    <p>
-                    You can grab the source for this app here: <a href="https://github.com/russellbeattie/plusfeed">https://github.com/russellbeattie/plusfeed</a>.
-                    </p>
-                    <p>
-                    <em>Originally created by <a href="http://www.russellbeattie.com">Russell Beattie</a></em>
-                    </p>
+                    <div id="gb">
+                    <a href="http://plus.google.com">Google+</a>
+                    </div>
+                    <div id="header">
+                        <h1>PlusFeed</h1>
+                        <h2>Unofficial Google+ User Feeds</h2>
+                        <span id="plusone"><g:plusone size="tall"></g:plusone></span>
+                    </div>
+                    <div id="content">
+                    <div id="intro">
+                        <h2>
+                        Want a <span class="stress">feed</span> for your Google+ posts?
+                        </h2>
+                        <div id="inst">
+                        <p>
+                        Simply add a Google+ user number to the end of this site's URL to get an Atom feed of <em>public</em> posts.
+                        </p>
+                        <p>
+                       Example: <a href="http://plusfeed.appspot.com/104961845171318028721">http://plusfeed.appspot.com/<strong>104961845171318028721</strong></a>
+                        </p>
+                        <p>
+                        <br/>
+                        You can grab the source for this app on GitHub <a href="https://github.com/russellbeattie/plusfeed">here</a>.
+                        </p>
+                        <p>
+                        <em>Originally created by <a href="http://www.russellbeattie.com">Russell Beattie</a></em>
+                        </p>
+                        </div>
+                    </div>
                     """)
-        list = memcache.get('list')            
-        if list:
-            out.write('<p><h3>' + str(len(list)) + ' Google+ profiles currently being served.</h3></p>\n\n')
-        
-        out.write('</div>\n')
-        
+                    
+        out.write('<div id="posts">\n')
         posts = memcache.get('posts')
         if posts:
             #logging.info(posts)
-            out.write('<h2>Recent Public Posts</h2>')
+            out.write('<h2>Recent Public Posts</h2>\n')
             x = 0
             for k,post in sorted(posts.iteritems(), reverse=True):
                 x = x + 1
@@ -73,22 +80,21 @@ class MainPage(webapp.RequestHandler):
                 out.write('<div class="updated"><a href="' + post['permalink'] + '">Posted on ' + (post['updated'] - td).strftime('%B %d, %Y - %I:%M %p') + ' PST</a></div>\n')
                 out.write('<p>' + post['desc'] + '</p>\n')
                 out.write('</div>\n')
+
+        out.write('</div>')
         
         out.write("""
+                    </div>
                     <script type="text/javascript">
-
                       var _gaq = _gaq || [];
                       _gaq.push(['_setAccount', 'UA-24604146-1']);
                       _gaq.push(['_trackPageview']);
-
                       (function() {
                         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
                         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
                         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
                       })();
-
                     </script>
-                    </div>
                 </body>
               </html>
                   """)
@@ -256,9 +262,9 @@ class FeedPage(webapp.RequestHandler):
                     pst['authorimg'] = authorimg
                     pst['desc'] = desc
                     
-                    if dt.date() == datetime.today().date():
-                        t = int(time.mktime(dt.timetuple()))
-                        psts[t] = pst
+                    #if (dt.date() - td) == datetime.today().date():
+                    t = int(time.mktime(dt.timetuple()))
+                    psts[t] = pst
                   
                 feed += '</feed>\n'
                 

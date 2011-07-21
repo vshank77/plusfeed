@@ -1,8 +1,13 @@
+
+@import url(//fonts.googleapis.com/css?family=Open+Sans);
+
 body{
     font-family: sans-serif;
     font-size: 14px;
-    padding: 0px 20px;
-    color: #666;
+    padding: 0px;
+    margin: 0px;
+    color: #888;
+    min-width: 800px;
 }
 
 li{
@@ -18,17 +23,98 @@ a{
     text-align: left;
 }
 
-#top h1{
-    color: #fff;
-    background-color: #000;
+#gb{
+height: 23px;
+width: 100%;
+background-color: #2D2D2D;
+border-bottom: 1px solid #000;
+font-size: 13px;
+padding: 6px 0px 0px;
+text-align: right;
+}
+
+#gb a{
+    color: #CCC;
+    font-weight: bold;
+    padding: 10px;
+    margin: 0px;
+}
+
+#header{
+height: 55px;
+width: 100%;
+border-bottom: 1px solid #E5E5E5;
+background-color: whiteSmoke;
+padding-top: 18px;
+
+}
+
+h1, h2{
+font-family: 'Open Sans';
+font-weight: normal;
+}
+
+#header h1{
+font-size: 26px;
+color: #3079ED;
+margin: 0px;
+padding: 0px 10px 0px 16px;
+display: inline;
+}
+
+#header h2{
+font-size: 16px;
+margin: 0px;
+padding: 0px;
+display: inline;
+}
+
+#plusone {
+position: absolute;
+top: 36px;
+right: 30px;
+}
+
+#content{
+    padding: 0px 16px;
+}
+
+#intro{
     padding: 10px;
 }
 
-h2 {
-color: black;
-margin: 10px 0px 0px;
-border-top: 1px dashed #999;
-padding-top: 10px;
+#intro h2{
+    font-size: 36px;
+    color: #333;
+}
+
+#inst{
+font-size: 16px;
+padding: 5px 20px;
+color: #666;
+}
+
+.center{
+    text-align: center;
+}
+.right{
+    text-align: right;
+}
+
+#posts{
+text-align: center;
+}
+
+.stress{
+    color: #DD4B39;
+}
+
+#posts h2 {
+color: #333;
+margin: 20px 0px;
+border-top: 1px solid #ccc;
+padding-top: 20px;
+text-align: left;
 }
 
 .post{
@@ -42,6 +128,7 @@ text-align: left;
 display: inline-block;
 vertical-align: top;
 overflow: auto;
+color: #666;
 }
 
 .post img{
