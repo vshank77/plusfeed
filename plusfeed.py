@@ -130,6 +130,12 @@ class FeedPage(webapp.RequestHandler):
         else:
             memcache.set(ip, now)
 
+        if p == 'showall':
+            posts = memcache.get('posts')
+            for k,post in sorted(posts.iteritems(), reverse=True):
+                out.write('<p>' + str(k) + ': <a href="' + post['permalink'] + '">Posted on ' + (post['updated'] - td).strftime('%B %d, %Y - %I:%M %p') + ' PST by ' + post['author'] + '</a> <br/>' + post['title'] + '</p>\n')
+            return
+
         if p == 'reset':
             memcache.flush_all()
             out.write('reset')
@@ -275,7 +281,7 @@ class FeedPage(webapp.RequestHandler):
                   
                     pst = {}
                     pst['permalink'] = permalink
-                    pst['title'] = ptitle
+                    pst['title'] = ptitle[:sentend]
                     pst['updated'] = dt
                     pst['author'] = author
                     pst['authorid'] = p
@@ -305,10 +311,14 @@ class FeedPage(webapp.RequestHandler):
                 x = 0
                 for k, v in sorted(mposts.iteritems(), reverse=True):
                     x = x+1
-                    if x > 500:
+                    if x > 100:
                         break
                     nposts[k] = v
-
+                
+                #logging.info(psts)
+                #logging.info(mposts)
+                logging.info(nposts)
+                
                 memcache.set('posts', nposts)
                 
                 #list of feeds
