@@ -122,7 +122,7 @@ class FeedPage(webapp.RequestHandler):
         last_request = memcache.get(ip)
         
         if last_request:
-            if (now - last_request).seconds < 20:
+            if (now - last_request).seconds < 5:
                 logging.info('rate limited - returning 403')
                 res.set_status(403)
                 out.write('Forbidden: Rate limit exceeded')
@@ -182,8 +182,18 @@ class FeedPage(webapp.RequestHandler):
             
             url = 'https://plus.google.com/_/stream/getactivities/' + p + '/?sp=[1,2,"' + p + '",null,null,null,null,"social.google.com",[]]'
             
-            result = urlfetch.fetch(url)
+            result = ''
             
+            try:
+                result = urlfetch.fetch(url, deadline=10)
+            except urlfetch.Error:
+                try:
+                    result = urlfetch.fetch(url, deadline=10)
+                except urlfetch.Error:
+                    self.error(500)
+                    out.write('<h1>500 Server Error</h1><p>' + str(err) + '</p>')
+                    logging.error(err)
+                    return
             
             if result.status_code == 200:
                 regex = re.compile(',,',re.M)
@@ -207,7 +217,7 @@ class FeedPage(webapp.RequestHandler):
                 authorimg = 'https:' + posts[0][18]
                 updated = datetime.fromtimestamp(float(posts[0][5])/1000)
                 
-                feed += '<title>Google Plus User Feed - ' + author + '</title>\n'
+                feed += '<title>' + author + ' - Google+ User Feed</title>\n'
                 feed += '<link href="https://plus.google.com/' + p + '" rel="alternate"></link>\n'
                 feed += '<link href="http://plusfeed.appspot.com/' + p + '" rel="self"></link>\n'
                 feed += '<id>https://plus.google.com/' + p + '</id>\n'
@@ -296,7 +306,7 @@ class FeedPage(webapp.RequestHandler):
                 
                 output = feed;
                 
-                memcache.set(p, output, 10 * 60)
+                memcache.set(p, output, 15 * 60)
                 memcache.set('time_' + p, updated)
                 
                 #front page 
@@ -317,7 +327,7 @@ class FeedPage(webapp.RequestHandler):
                 
                 #logging.info(psts)
                 #logging.info(mposts)
-                logging.info(nposts)
+                #logging.info(nposts)
                 
                 memcache.set('posts', nposts)
                 
