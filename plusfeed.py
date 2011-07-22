@@ -78,7 +78,6 @@ class MainPage(webapp.RequestHandler):
         if posts:
             #logging.info(posts)
             out.write('<h2>Recent Public Posts</h2>\n')
-            out.write('<div id="numfeeds">' + msg + '</div>')
             x = 0
             for k,post in sorted(posts.iteritems(), reverse=True):
                 x = x + 1
@@ -137,6 +136,7 @@ class FeedPage(webapp.RequestHandler):
             return
         
         remtags = re.compile(r'<.*?>')
+        remspaces = re.compile(r'\s+')
                 
         feed = '<?xml version="1.0" encoding="UTF-8"?>\n'
         feed += '<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">\n'
@@ -253,10 +253,20 @@ class FeedPage(webapp.RequestHandler):
                     
                     
                     ptitle = htmldecode(desc)
-                    ptitle = remtags.sub('', ptitle)
+                    ptitle = remtags.sub(' ', ptitle)
+                    ptitle = remspaces.sub(' ', ptitle)
+                    
+                    sentend = 75
+                    se_break = re.compile('[.!?:]\s+', re.VERBOSE)
+                    m = se_break.split(ptitle)
+                    if m:
+                        sentend = len(m[0]) + 1
+                    
+                    if sentend < 5 or sentend > 75:
+                        sentend = 75
 
                     feed += '<entry>\n'
-                    feed += '<title>' + escape(ptitle[:75]) + '</title>\n'
+                    feed += '<title>' + escape(ptitle[:sentend]) + '</title>\n'
                     feed += '<link href="' + permalink + '" rel="alternate"></link>\n'
                     feed += '<updated>' + dt.strftime(ATOM_DATE) + '</updated>\n'
                     feed += '<id>tag:plus.google.com,' + dt.strftime('%Y-%m-%d') + ':/' + id + '/</id>\n'

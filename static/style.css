@@ -135,6 +135,7 @@ display: inline-block;
 vertical-align: top;
 overflow: auto;
 color: #666;
+word-wrap: break-word;
 }
 
 .post img{
