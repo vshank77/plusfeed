@@ -1,0 +1,4 @@
+blacklist:
+- subnet: 75.119.221.166
+  description: too much
+

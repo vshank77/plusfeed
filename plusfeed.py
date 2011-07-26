@@ -84,7 +84,24 @@ homepagetext = """
 		</body>
 	  </html>
 	"""
-homepage = Template(homepagetext);
+homepage = Template(homepagetext)
+
+noitemstext = """<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>No Public Items Found</title>
+  <updated>$up</updated>
+  <id>http://plusfeed.appspot.com/$p</id>
+  <entry>
+    <title>No Public Items Found</title>
+    <link href="http://plus.google.com/$p"/>
+    <id>http://plusfeed.appspot.com/$p?lastupdated=$up</id>
+    <updated>$up</updated>
+    <summary>Google+ user $p has not made any posts public.</summary>
+  </entry>
+</feed>
+"""
+
+noitems = Template(noitemstext)
 
 
 class MainPage(webapp.RequestHandler):
@@ -110,6 +127,30 @@ class MainPage(webapp.RequestHandler):
 			return	
 
 		if idurls.match(p):
+		
+			# Rate Limit check
+			
+			ip = environ['REMOTE_ADDR']
+			now = datetime.today()
+			
+			req_count = None
+			
+			try:
+				req_count = memcache.incr(ip)
+			except:
+				req_count = None
+			
+			#logging.info(str(ip) + ' - ' + str(req_count))
+		
+			if req_count:
+				if req_count > 20:
+					logging.debug('rate limited - returning 403 - ' + str(req_count))
+					res.set_status(403)
+					out.write('<h1>403</h1> Forbidden: Rate limit exceeded - 20 request per minute maximum. #' + str(req_count))
+					return
+			else:
+				memcache.set(ip, 1, 60)
+
 
 			# If Modified Since check
 
@@ -135,21 +176,6 @@ class MainPage(webapp.RequestHandler):
 				out.write(op)
 				return
 
-			# Rate Limit check
-			
-			ip = environ['REMOTE_ADDR']
-			now = datetime.today()
-			
-			last_request = memcache.get(ip)
-		
-			if last_request:
-				if (now - last_request).seconds < 5:
-					logging.debug('rate limited - returning 403')
-					res.set_status(403)
-					out.write('Forbidden: Rate limit exceeded - 1 request per 5 seconds maximum')
-					return
-			else:
-				memcache.set(ip, now)
 
 
 			self.doFeed(p)
@@ -215,8 +241,14 @@ class MainPage(webapp.RequestHandler):
 				posts = obj[1][0]
 
 				if not posts:
-					self.error(400)
-					out.write('<h1>400 - No Public Items Found</h1>')
+					#self.error(400)
+					#out.write('<h1>400 - No Public Items Found</h1>')
+					logging.debug('No public feeds found')
+					res.headers['Content-Type'] = 'application/atom+xml'
+					updated = datetime.today()
+					upstr = updated.strftime(ATOM_DATE)
+					out.write(noitems.substitute(up = upstr, p = p))
+					
 					return
 
 
@@ -317,8 +349,9 @@ class MainPage(webapp.RequestHandler):
 
 			
 			else:
-				self.error(result.status_code)
-				out.write('<h1>' + result.content + '</h1>')
+				self.error(404)
+				out.write('<h1>404 - Not Found</h1>')
+				logging.debug(p + ' Not Found')
 		
 		except Exception, err:
 			self.error(500)
