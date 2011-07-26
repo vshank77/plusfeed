@@ -143,10 +143,10 @@ class MainPage(webapp.RequestHandler):
 			#logging.info(str(ip) + ' - ' + str(req_count))
 		
 			if req_count:
-				if req_count > 20:
+				if req_count > 30:
 					logging.debug('rate limited - returning 403 - ' + str(req_count))
 					res.set_status(403)
-					out.write('<h1>403</h1> Forbidden: Rate limit exceeded - 20 request per minute maximum. #' + str(req_count))
+					out.write('<h1>403</h1> Forbidden: Rate limit exceeded - 30 request per minute maximum. #' + str(req_count))
 					return
 			else:
 				memcache.set(ip, 1, 60)
