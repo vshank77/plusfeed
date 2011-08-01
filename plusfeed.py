@@ -8,6 +8,7 @@ from cgi import escape
 from datetime import datetime
 from datetime import timedelta
 from time import mktime
+from time import sleep
 from string import Template
 from htmlentitydefs import name2codepoint
 from os import environ
@@ -143,11 +144,16 @@ class MainPage(webapp.RequestHandler):
 			#logging.info(str(ip) + ' - ' + str(req_count))
 		
 			if req_count:
-				if req_count > 30:
+				if req_count > 60:
 					logging.debug('rate limited - returning 403 - ' + str(req_count))
 					res.set_status(403)
-					out.write('<h1>403</h1> Forbidden: Rate limit exceeded - 30 request per minute maximum. #' + str(req_count))
+					out.write('<h1>403</h1> Forbidden: Rate limit exceeded - 60 request per minute maximum. #' + str(req_count))					
 					return
+					
+				#if req_count > 20:
+				#	logging.debug('rate limited - pausing 2 seconds - ' + str(req_count))
+				#	sleep(2)
+
 			else:
 				memcache.set(ip, 1, 60)
 

@@ -2,3 +2,11 @@ blacklist:
 - subnet: 75.119.221.166
   description: too much
 
+- subnet: 98.130.2.91
+  description: php
+  
+- subnet: 72.44.45.107
+  description: random
+
+- subnet: 184.154.248.66 
+  description: random
