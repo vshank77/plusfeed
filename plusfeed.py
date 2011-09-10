@@ -90,12 +90,14 @@ homepage = Template(homepagetext)
 noitemstext = """<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>No Public Items Found</title>
+  <link href="https://plus.google.com/$p" rel="alternate"></link>
+  <link href="$base_url/$p" rel="self"></link>
+  <id>https://plus.google.com/$p</id>
   <updated>$up</updated>
-  <id>$base_url/$p</id>
   <entry>
     <title>No Public Items Found</title>
     <link href="http://plus.google.com/$p"/>
-    <id>$base_url/$p?lastupdated=$up</id>
+    <id>https://plus.google.com/$p</id>
     <updated>$up</updated>
     <summary>Google+ user $p has not made any posts public.</summary>
   </entry>
