@@ -32,6 +32,7 @@ charrefpat = re.compile(r'&(#(\d+|x[\da-fA-F]+)|[\w.:-]+);?')
 
 HTTP_DATE_FMT = "%a, %d %b %Y %H:%M:%S GMT"
 ATOM_DATE = "%Y-%m-%dT%H:%M:%SZ"
+MAX_PAGE_COUNT = 10
 
 homepagetext = """
 	<html>
@@ -217,7 +218,7 @@ class MainPage(webapp.RequestHandler):
 		try:
 			logging.debug('re-requesting feed')
 			
-			url = 'https://plus.google.com/_/stream/getactivities/' + p + '/?sp=[1,2,"' + p + '",null,null,null,null,"social.google.com",[]]'
+			url = 'https://plus.google.com/_/stream/getactivities/' + p + '/?sp=[1,2,"' + p + '",null,null,' + str(MAX_PAGE_COUNT) + ',null,"social.google.com",[]]'
 			
 			result = ''
 			
@@ -282,7 +283,8 @@ class MainPage(webapp.RequestHandler):
 				for post in posts:
 					
 					count = count + 1
-					if count > 10:
+					# This should never be hit as Google should never return more than requested
+					if count > MAX_PAGE_COUNT:
 						break
 					
 					
