@@ -60,7 +60,7 @@ homepagetext = """
 					Simply add a Google+ user number to the end of this site's URL to get an Atom feed of <em>public</em> posts.
 					</p>
 					<p>
-				   Example: <a href="http://plusfeed.appspot.com/104961845171318028721">http://plusfeed.appspot.com/<strong>104961845171318028721</strong></a>
+				   Example: <a href="$base_url/104961845171318028721">$base_url/<strong>104961845171318028721</strong></a>
 					</p>
 					<p>
 					<br/>
@@ -90,12 +90,14 @@ homepage = Template(homepagetext)
 noitemstext = """<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>No Public Items Found</title>
+  <link href="https://plus.google.com/$p" rel="alternate"></link>
+  <link href="$base_url/$p" rel="self"></link>
+  <id>https://plus.google.com/$p</id>
   <updated>$up</updated>
-  <id>http://plusfeed.appspot.com/$p</id>
   <entry>
     <title>No Public Items Found</title>
     <link href="http://plus.google.com/$p"/>
-    <id>http://plusfeed.appspot.com/$p?lastupdated=$up</id>
+    <id>https://plus.google.com/$p</id>
     <updated>$up</updated>
     <summary>Google+ user $p has not made any posts public.</summary>
   </entry>
@@ -202,7 +204,8 @@ class MainPage(webapp.RequestHandler):
 		if list:
 			msg = ' Serving ' + str(len(list)) + ' feeds in the past 24 hours';
 
-		out.write(homepage.substitute(countmsg = msg))	   
+		base_url = self.request.application_url
+		out.write(homepage.substitute(countmsg = msg, base_url = base_url))     
 
 
 	
@@ -236,6 +239,7 @@ class MainPage(webapp.RequestHandler):
 			
 			if result.status_code == 200:
 
+				base_url = self.request.application_url
 				txt = result.content
 				txt = txt[5:]
 				txt = commas.sub(',null,',txt)
@@ -253,7 +257,9 @@ class MainPage(webapp.RequestHandler):
 					res.headers['Content-Type'] = 'application/atom+xml'
 					updated = datetime.today()
 					upstr = updated.strftime(ATOM_DATE)
-					out.write(noitems.substitute(up = upstr, p = p))
+					out.write(noitems.substitute(up = upstr, 
+								     p = p, 
+								     base_url = base_url))
 					
 					return
 
@@ -266,7 +272,7 @@ class MainPage(webapp.RequestHandler):
 				feed += '<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">\n'
 				feed += '<title>' + author + ' - Google+ User Feed</title>\n'
 				feed += '<link href="https://plus.google.com/' + p + '" rel="alternate"></link>\n'
-				feed += '<link href="http://plusfeed.appspot.com/' + p + '" rel="self"></link>\n'
+				feed += '<link href="' + base_url + '/' + p + '" rel="self"></link>\n'
 				feed += '<id>https://plus.google.com/' + p + '</id>\n'
 				feed += '<updated>' + updated.strftime(ATOM_DATE) + '</updated>\n'
 				feed += '<author><name>' + author + '</name></author>\n'
