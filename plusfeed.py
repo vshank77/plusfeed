@@ -26,8 +26,9 @@ idurls = re.compile(r'[0-9]+')
 remtags = re.compile(r'<.*?>')
 remspaces = re.compile(r'\s+')
 commas = re.compile(',,',re.M)
-se_break = re.compile('[.!?:]\s+', re.VERBOSE)
+se_break = re.compile('\S+', re.VERBOSE)
 charrefpat = re.compile(r'&(#(\d+|x[\da-fA-F]+)|[\w.:-]+);?')
+six_periods = re.compile("\.?\.?\.\.\.\.$")
 
 
 HTTP_DATE_FMT = "%a, %d %b %Y %H:%M:%S GMT"
@@ -322,17 +323,10 @@ class MainPage(webapp.RequestHandler):
 					ptitle = remtags.sub(' ', ptitle)
 					ptitle = remspaces.sub(' ', ptitle)
 					
-					sentend = 75
-					
-					m = se_break.split(ptitle)
-					if m:
-						sentend = len(m[0]) + 1
-					
-					if sentend < 5 or sentend > 75:
-						sentend = 75
+					ptitle = self.abbreviate(ptitle)
 
 					feed += '<entry>\n'
-					feed += '<title>' + escape(ptitle[:sentend]) + '</title>\n'
+					feed += '<title>' + escape(ptitle) + '</title>\n'
 					feed += '<link href="' + permalink + '" rel="alternate"></link>\n'
 					feed += '<updated>' + dt.strftime(ATOM_DATE) + '</updated>\n'
 					feed += '<id>tag:plus.google.com,' + dt.strftime('%Y-%m-%d') + ':/' + id + '/</id>\n'
@@ -370,6 +364,23 @@ class MainPage(webapp.RequestHandler):
 			out.write('<h1>500 Server Error</h1><p>' + str(err) + '</p>')
 			logging.error(err)
 
+
+	def abbreviate(self, title):
+		end_at = 75
+		max_length = 75
+		for match in se_break.finditer(title):
+			# print str(match.start(0)) + " TO " + str(match.end(0))
+			if (match.end(0) < max_length):
+				end_at = match.end(0)
+				continue			
+			break
+
+		abbreviation = title[:end_at]
+		if (len(abbreviation) < len(title)):
+			abbreviation += "..."			
+			abbreviation = six_periods.sub("...", abbreviation)
+
+		return abbreviation
 
 
 	def htmldecode(self, text):
