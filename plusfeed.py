@@ -33,6 +33,8 @@ six_periods = re.compile("\.?\.?\.\.\.\.$")
 
 HTTP_DATE_FMT = "%a, %d %b %Y %H:%M:%S GMT"
 ATOM_DATE = "%Y-%m-%dT%H:%M:%SZ"
+# https://plus.google.com/104961845171318028721/posts/QqA4E2uHx3w#104961845171318028721/posts/QqA4E2uHx3w
+MAX_TITLE_LENGTH=75
 
 homepagetext = """
 	<html>
@@ -366,8 +368,9 @@ class MainPage(webapp.RequestHandler):
 
 
 	def abbreviate(self, title):
-		end_at = 75
-		max_length = 75
+		# leave space for elipses
+		end_at = MAX_TITLE_LENGTH - 3
+		max_length = MAX_TITLE_LENGTH - 3
 		for match in se_break.finditer(title):
 			# print str(match.start(0)) + " TO " + str(match.end(0))
 			if (match.end(0) < max_length):
