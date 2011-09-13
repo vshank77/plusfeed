@@ -32,6 +32,7 @@ charrefpat = re.compile(r'&(#(\d+|x[\da-fA-F]+)|[\w.:-]+);?')
 
 HTTP_DATE_FMT = "%a, %d %b %Y %H:%M:%S GMT"
 ATOM_DATE = "%Y-%m-%dT%H:%M:%SZ"
+ENABLE_CACHE=True
 
 homepagetext = """
 	<html>
@@ -157,7 +158,8 @@ class MainPage(webapp.RequestHandler):
 				#	sleep(2)
 
 			else:
-				memcache.set(ip, 1, 60)
+				if ENABLE_CACHE:
+					memcache.set(ip, 1, 60)
 
 
 			# If Modified Since check
@@ -341,18 +343,19 @@ class MainPage(webapp.RequestHandler):
 				  
 				feed += '</feed>\n'
 				
-				memcache.set(p, feed, 15 * 60)
-				memcache.set('time_' + p, updated)
+				if ENABLE_CACHE:
+					memcache.set(p, feed, 15 * 60)
+					memcache.set('time_' + p, updated)
 				
-				mlist = memcache.get('list')
-				if mlist:
-					if p not in mlist:
-						mlist.append(p)
-				else:
-					mlist = []
-					mlist.append(p)
-				
-				memcache.set('list', mlist, 60 * 60 * 24)
+					mlist = memcache.get('list')
+					if mlist:
+						if p not in mlist:
+							mlist.append(p)
+						else:
+							mlist = []
+							mlist.append(p)
+
+					memcache.set('list', mlist, 60 * 60 * 24)
 				
 				res.headers['Last-Modified'] = updated.strftime(HTTP_DATE_FMT)
 				res.headers['Content-Type'] = 'application/atom+xml'
