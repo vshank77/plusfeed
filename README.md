@@ -39,6 +39,8 @@ Java: http://code.google.com/p/javaplus/
 
 PHP: http://github.com/jmstriegel/php.googleplusapi
 
+Node.js: https://github.com/tedkulp/gplusfeed
+
 ***
 Created by <a href="http://www.russellbeattie.com">Russell Beattie</a>.
 
