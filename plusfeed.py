@@ -320,10 +320,10 @@ class MainPage(webapp.RequestHandler):
 					if desc == '':
 						desc = permalink					
 					
-					
-					ptitle = self.htmldecode(desc)
+					ptitle = desc
 					ptitle = remtags.sub(' ', ptitle)
 					ptitle = remspaces.sub(' ', ptitle)
+					ptitle = self.htmldecode(ptitle)
 					
 					ptitle = self.abbreviate(ptitle)
 
