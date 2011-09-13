@@ -33,7 +33,7 @@ six_periods = re.compile("\.?\.?\.\.\.\.$")
 
 HTTP_DATE_FMT = "%a, %d %b %Y %H:%M:%S GMT"
 ATOM_DATE = "%Y-%m-%dT%H:%M:%SZ"
-# https://plus.google.com/104961845171318028721/posts/QqA4E2uHx3w#104961845171318028721/posts/QqA4E2uHx3w
+# https://plus.google.com/104961845171318028721/posts/QqA4E2uHx3w
 MAX_TITLE_LENGTH=75
 
 homepagetext = """
