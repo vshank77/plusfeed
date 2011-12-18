@@ -336,6 +336,7 @@ class MainPage(webapp.RequestHandler):
 					feed += '<entry>\n'
 					feed += '<title>' + escape(ptitle[:sentend]) + '</title>\n'
 					feed += '<link href="' + permalink + '" rel="alternate"></link>\n'
+					feed += '<published>' + dt.strftime(ATOM_DATE) + '</published>\n'
 					feed += '<updated>' + dt.strftime(ATOM_DATE) + '</updated>\n'
 					feed += '<id>tag:plus.google.com,' + dt.strftime('%Y-%m-%d') + ':/' + id + '/</id>\n'
 					feed += '<summary type="html">' + escape(desc) + '</summary>\n'
