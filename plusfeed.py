@@ -1,6 +1,7 @@
 import sys
 import re
 import logging
+import traceback
 
 import simplejson as json
 
@@ -35,6 +36,7 @@ HTTP_DATE_FMT = "%a, %d %b %Y %H:%M:%S GMT"
 ATOM_DATE = "%Y-%m-%dT%H:%M:%SZ"
 # https://plus.google.com/104961845171318028721/posts/QqA4E2uHx3w
 MAX_TITLE_LENGTH=75
+MAX_POSTS = 10
 
 homepagetext = """
 	<html>
@@ -220,7 +222,7 @@ class MainPage(webapp.RequestHandler):
 		try:
 			logging.debug('re-requesting feed')
 			
-			url = 'https://plus.google.com/_/stream/getactivities/' + p + '/?sp=[1,2,"' + p + '",null,null,null,null,"social.google.com",[]]'
+			url = 'https://plus.google.com/_/stream/getactivities/' + p + '/?sp=[1,2,"' + p + '",null,null,' + str(MAX_POSTS) + ',null,"social.google.com",[]]'
 			
 			result = ''
 			
@@ -251,7 +253,7 @@ class MainPage(webapp.RequestHandler):
 				txt = txt.replace(',]',',null]')
 				obj = json.loads(txt)
 				
-				posts = obj[1][0]
+				posts = obj[0][1][0]
 
 				if not posts:
 					#self.error(400)
@@ -285,7 +287,8 @@ class MainPage(webapp.RequestHandler):
 				for post in posts:
 					
 					count = count + 1
-					if count > 10:
+					# This should never be hit as Google should never return more than requested
+					if count > MAX_POSTS:
 						break
 					
 					
@@ -330,6 +333,7 @@ class MainPage(webapp.RequestHandler):
 					feed += '<entry>\n'
 					feed += '<title>' + escape(ptitle) + '</title>\n'
 					feed += '<link href="' + permalink + '" rel="alternate"></link>\n'
+					feed += '<published>' + dt.strftime(ATOM_DATE) + '</published>\n'
 					feed += '<updated>' + dt.strftime(ATOM_DATE) + '</updated>\n'
 					feed += '<id>tag:plus.google.com,' + dt.strftime('%Y-%m-%d') + ':/' + id + '/</id>\n'
 					feed += '<summary type="html">' + escape(desc) + '</summary>\n'
@@ -365,6 +369,7 @@ class MainPage(webapp.RequestHandler):
 			self.error(500)
 			out.write('<h1>500 Server Error</h1><p>' + str(err) + '</p>')
 			logging.error(err)
+			traceback.print_exc()
 
 
 	def abbreviate(self, title):
